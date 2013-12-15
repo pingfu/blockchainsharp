@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using BlockChainSharp.Dto;
 using BlockChainSharp.PInvoke;
 using BlockChainSharp.Util;
@@ -35,6 +37,11 @@ namespace BlockChainSharp
         public BitcoinBlock CurrentBlock;
 
         /// <summary>
+        /// default location of the blockchain files
+        /// </summary>
+        private readonly String _defaultBlockChainDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks";
+
+        /// <summary>
         /// Returns an ordered enumerable collection of file information about each blockchain data file
         /// </summary>
         private static IEnumerable<FileInfo> _blockChainFiles;
@@ -48,11 +55,6 @@ namespace BlockChainSharp
         /// location of blockchain files
         /// </summary>
         private static DirectoryInfo _blockChainDirectory;
-
-        /// <summary>
-        /// default location of the blockchain files
-        /// </summary>
-        private readonly String _defaultBlockChainDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks";
 
         /// <summary>
         /// Provides a view of the current cluster size on disk. Declared class level to reduce PInvoke calls
@@ -141,6 +143,8 @@ namespace BlockChainSharp
                     newOutput.OutputValue = BitConverter.ToUInt64(Dequeue(8), 0);
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
                     newOutput.ChallengeScript = Dequeue(newOutput.ChallengeScriptLength);
+                    newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
+                    newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
                 }
 
@@ -238,6 +242,52 @@ namespace BlockChainSharp
                 case 255: return BitConverter.ToInt64(Dequeue(8), 0); // uint64_t
                 default: return length;
             }
+        }
+
+        /// <summary>
+        /// Extract the ECDSA public key from the ChallengeScript value of the blockchain
+        /// </summary>
+        /// <returns></returns>
+        private static byte[] ExtractPublicKey(byte[] challengeScript)
+        {
+            var publicKey = new byte[65];
+
+            if (challengeScript.Length == 67 && challengeScript[0] == 0x41 && challengeScript[66] == 0xAC)
+            {
+                Array.Copy(challengeScript, 1, publicKey, 0, 65);
+            }
+
+            return publicKey;
+        }
+
+        /// <summary>
+        /// Thanks http://gobittest.appspot.com/Address for this method 
+        /// </summary>
+        /// <param name="ecdsaPublickey">Standard format ecdsa public key taken from the blockchain</param>
+        /// <returns></returns>
+        private static string ComputeBitcoinAddress(byte[] ecdsaPublickey)
+        {
+            var sha256Managed = new SHA256Managed();
+            var ripeMd160Managed = new RIPEMD160Managed();
+
+            var step1 = new byte[32]; // sha256 ecdsaPublicKey
+            var step2 = new byte[20]; // ripemd-160 hash step1
+            var step3 = new byte[21]; // add network bytes to step2
+            var step4 = new byte[32]; // sha256 step3
+            var step5 = new byte[32]; // sha256 step4
+            var step6 = new byte[4];  // get first four bytes of step 5
+            var step7 = new byte[25]; // add step6 to the end of step3
+            
+            step1 = sha256Managed.ComputeHash(ecdsaPublickey);
+            step2 = ripeMd160Managed.ComputeHash(step1);
+            Array.Copy(step2, 0, step3, 1, 20);
+            step4 = sha256Managed.ComputeHash(step3);
+            step5 = sha256Managed.ComputeHash(step4);
+            Array.Copy(step5, 0, step6, 0, 4);
+            Array.Copy(step3, 0, step7, 0, 21);
+            Array.Copy(step6, 0, step7, 21, 4);
+
+            return Base58Encoding.Encode(step7);
         }
     }
 }
