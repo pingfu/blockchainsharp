@@ -31,7 +31,7 @@ namespace console
         public static void Main(string[] args)
         {
             var bcr = new BlockChainReader(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks"));
-            var n = -1;
+            var n = -1; // first read increments to block 0
 
             while (bcr.Read())
             {
