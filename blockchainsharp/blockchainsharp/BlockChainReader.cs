@@ -279,9 +279,6 @@ namespace BlockChainSharp
         /// <returns></returns>
         private static string ComputeBitcoinAddress(byte[] ecdsaPublickey)
         {
-            var sha256Managed = new SHA256Managed();
-            var ripeMd160Managed = new RIPEMD160Managed();
-
             // step1: byte[32] -- sha256 ecdsaPublicKey
             // step2: byte[20] -- ripemd-160 hash step1
             // step3: byte[21] -- add network bytes to step2
@@ -290,20 +287,27 @@ namespace BlockChainSharp
             // step6: byte[4]  -- get first four bytes of step 5
             // step7: byte[25] -- add step6 to the end of step3
 
-            var step3 = new byte[21];
-            var step6 = new byte[4];
-            var step7 = new byte[25];
-            
-            var step1 = sha256Managed.ComputeHash(ecdsaPublickey);
-            var step2 = ripeMd160Managed.ComputeHash(step1);
-            Array.Copy(step2, 0, step3, 1, 20);
-            var step4 = sha256Managed.ComputeHash(step3);
-            var step5 = sha256Managed.ComputeHash(step4);
-            Array.Copy(step5, 0, step6, 0, 4);
-            Array.Copy(step3, 0, step7, 0, 21);
-            Array.Copy(step6, 0, step7, 21, 4);
+            using (var sha256Managed = new SHA256Managed())
+            {
+                using (var ripeMd160Managed = new RIPEMD160Managed())
+                {
+                    var step3 = new byte[21];
+                    var step6 = new byte[4];
+                    var step7 = new byte[25];
 
-            return Base58Encoding.Encode(step7);
+                    var step1 = sha256Managed.ComputeHash(ecdsaPublickey);
+                    var step2 = ripeMd160Managed.ComputeHash(step1);
+                    Array.Copy(step2, 0, step3, 1, 20);
+                    var step4 = sha256Managed.ComputeHash(step3);
+                    var step5 = sha256Managed.ComputeHash(step4);
+                    Array.Copy(step5, 0, step6, 0, 4);
+                    Array.Copy(step3, 0, step7, 0, 21);
+                    Array.Copy(step6, 0, step7, 21, 4);
+
+                    return Base58Encoding.Encode(step7);
+                    
+                }
+            }
         }
     }
 }
