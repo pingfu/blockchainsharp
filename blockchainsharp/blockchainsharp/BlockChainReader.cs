@@ -305,7 +305,6 @@ namespace BlockChainSharp
                     Array.Copy(step6, 0, step7, 21, 4);
 
                     return Base58Encoding.Encode(step7);
-                    
                 }
             }
         }

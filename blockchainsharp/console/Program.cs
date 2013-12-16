@@ -82,9 +82,7 @@ namespace console
                         Console.WriteLine();
                     }
                 }
-                Console.ReadLine();
             }
-            
             Console.WriteLine("finished");
             Console.ReadLine();
         }
