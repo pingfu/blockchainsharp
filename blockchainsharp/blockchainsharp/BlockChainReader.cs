@@ -169,6 +169,10 @@ namespace BlockChainSharp
 
             for (var i = 0; i < count; i++)
             {
+                // todo: a fifo queue operating byte by byte is WAY too slow, what can we replace this with?
+                // todo: BufferedStream operating on a BinaryReader?
+                // todo: light fifo memory stream?
+                // todo: Array.Copy?
                 byteArray[i] = _byteQueue.Dequeue();
             }
 

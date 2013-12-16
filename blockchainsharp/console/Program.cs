@@ -36,9 +36,7 @@ namespace console
             while (bcr.Read())
             {
                 n++;
-
                 if (!ShowDebug) continue;
-                //if (n != 254163) continue;
 
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
