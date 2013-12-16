@@ -50,7 +50,8 @@
     <Compile Include="BlockChainReader.cs" />
     <Compile Include="PInvoke\ClusterSize.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\Base58Encoding.cs" />
+    <Compile Include="Util\Encoding\ArrayHelpers.cs" />
+    <Compile Include="Util\Encoding\Base58Encoding.cs" />
     <Compile Include="Util\Helper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

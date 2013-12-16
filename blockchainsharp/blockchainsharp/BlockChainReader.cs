@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using BlockChainSharp.Dto;
 using BlockChainSharp.PInvoke;
 using BlockChainSharp.Util;
+using BlockChainSharp.Util.Encoding;
 
 namespace BlockChainSharp
 {
