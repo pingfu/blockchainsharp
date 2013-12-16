@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BlockChainSharp;
 
 
@@ -12,10 +15,17 @@ namespace console
     /// </summary>
     public class Program
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool ShowDebug = true;
+        public static BlockChainReader Bcr = new BlockChainReader(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks"));
+        
+        public static Timer Timer;
+
+        public static HashSet<byte[]> PublicKeyDictionary = new HashSet<byte[]>();
+
+        public static Int64 N = -1; // first read increments to block 0
+
+        public static Int64 T = 0;  // transaction output counter
+
+        public static Int64 LastCount = 0;
 
         /// <summary>
         /// 
@@ -23,61 +33,55 @@ namespace console
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            var bcr = new BlockChainReader(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks"));
-            var n = -1; // first read increments to block 0
+            Console.WriteLine("ready...");
+            Console.ReadLine();
 
-            while (bcr.Read())
+            Timer = new Timer(TimerCallback, null, 2000, 100);
+
+            while (Bcr.Read())
             {
-                n++;
-                if (!ShowDebug) continue;
-
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("currentFile:                 {0}", bcr.WorkingFile.Current.FullName);
-                Console.WriteLine("blockNumber:                 {0}", n);
-                Console.WriteLine("magicBytes:                  {0}", BitConverter.ToString(bcr.CurrentBlock.MagicBytes));
-                Console.WriteLine("blockSize:                   {0}", bcr.CurrentBlock.BlockSize);
-                Console.WriteLine("blockFormatVersion:          {0}", bcr.CurrentBlock.BlockFormatVersion);
-                Console.WriteLine("previousBlockHash:           {0}", BitConverter.ToString(bcr.CurrentBlock.PreviousBlockHash).Replace("-", ""));
-                Console.WriteLine("markleRoot:                  {0}", BitConverter.ToString(bcr.CurrentBlock.MerkleRoot).Replace("-", ""));
-                Console.WriteLine("timeStamp:                   {0}", bcr.CurrentBlock.TimeStamp);
-                Console.WriteLine("bits:                        {0}", bcr.CurrentBlock.Bits);
-                Console.WriteLine("nonce:                       {0}", bcr.CurrentBlock.Nonce);
-                Console.WriteLine("transactionCount:            {0}", bcr.CurrentBlock.TransactionCount);
-                Console.WriteLine();
-
-                foreach (var transaction in bcr.CurrentBlock.Transactions)
+                N++;
+                foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
                 {
-                    Console.WriteLine(" + transactionVersionNumber: {0}", transaction.TransactionVersionNumber);
-                    Console.WriteLine("   inputCount:               {0}", transaction.InputCount);
-                    Console.WriteLine("   outputCount:              {0}", transaction.OutputCount);
-                    Console.WriteLine("   lockTime:                 {0}", transaction.LockTime);
-
-                    Console.WriteLine();
-
-                    foreach (var intput in transaction.Inputs)
-                    {
-                        Console.WriteLine("   -> inputTransactionHash:  {0}", BitConverter.ToString(intput.InputTransactionHash).Replace("-", ""));
-                        Console.WriteLine("    > inputTransactionIndex: {0}", intput.InputTransactionIndex);
-                        Console.WriteLine("    > responseScriptLength:  {0}", intput.ResponseScriptLength);
-                        Console.WriteLine("    > responseScript:        {0}", Encoding.ASCII.GetString(intput.ResponseScript));
-                        Console.WriteLine("    > sequenceNumber:        {0}", intput.SequenceNumber);
-                        Console.WriteLine();
-                    }
-
-                    foreach (var output in transaction.Outputs)
-                    {
-                        Console.WriteLine("   -> outputValue:           {0}", output.OutputValue / 100000000 + " BTC");
-                        Console.WriteLine("    > challengeScriptLength: {0}", output.ChallengeScriptLength);
-                        Console.WriteLine("    > challengeScript:       {0}", BitConverter.ToString(output.ChallengeScript).Replace("-", string.Empty));
-                        Console.WriteLine("    > ecdsaPublickey:        {0}", BitConverter.ToString(output.EcdsaPublickey).Replace("-", string.Empty));
-                        Console.WriteLine("    > bitcoinAddress:        {0}", output.BitcoinAddress);
-                        Console.WriteLine();
-                    }
+                    ThreadPool.QueueUserWorkItem(ProcessOutput, output.EcdsaPublickey);
+                    T++;
                 }
             }
             Console.WriteLine("finished");
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="o"></param>
+        public static void TimerCallback(Object o)
+        {
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("currentFile:                 {0}", Bcr.WorkingFile.Current.FullName);
+            Console.WriteLine("deltaReads:                  {0:n0}", N - LastCount);
+            Console.WriteLine("queueLength:                 {0:n0}", Bcr._byteQueue.Count);
+            Console.WriteLine();
+            Console.WriteLine("observedBlocks:              {0:n0}", N);
+            Console.WriteLine("observedTransactions:        {0:n0}", T);
+            Console.WriteLine("uniqueCoinAddresses:         {0:n0}", PublicKeyDictionary.Count);
+            Console.WriteLine();
+            LastCount = N;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ecdsaPublickey"></param>
+        public static void ProcessOutput(object ecdsaPublickey)
+        {
+            var bytes = (byte[]) ecdsaPublickey;
+
+            if (!PublicKeyDictionary.Contains(bytes))
+            {
+                PublicKeyDictionary.Add(bytes);
+            }
         }
     }
 }

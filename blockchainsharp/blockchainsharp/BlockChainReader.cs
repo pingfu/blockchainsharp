@@ -79,7 +79,7 @@ namespace BlockChainSharp
         /// <summary>
         /// Provides a sequential view of the blockchain to the Read() method
         /// </summary>
-        private readonly Queue<byte> _byteQueue = new Queue<byte>();
+        public readonly Queue<byte> _byteQueue = new Queue<byte>();
 
         /// <summary>
         /// Assigns the enumerator we use on the enumerable the files on disk comprising the blockchain
@@ -161,7 +161,7 @@ namespace BlockChainSharp
         /// <returns></returns>
         private byte[] Dequeue(Int64 count)
         {
-            if (_byteQueue.Count < 2097152) 
+            if (_byteQueue.Count == 0 || count >= _byteQueue.Count) 
             {
                 BlockChainReadAhead();
             }
@@ -251,7 +251,7 @@ namespace BlockChainSharp
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private byte[] ReverseArray(byte[] array)
+        private static byte[] ReverseArray(byte[] array)
         {
             Array.Reverse(array);
             return array;
