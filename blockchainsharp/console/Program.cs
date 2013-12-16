@@ -7,15 +7,8 @@ using BlockChainSharp;
 namespace console
 {
     /// <summary>
-    /// blockchain file format
-    /// blockchain format
-    /// blockchain c# library
-    /// c# blockchain
-    /// blockchain unique addresses
-    /// c# blockchain parser
-    /// bitcoin does key exist in blockchain
-    /// view the bitcoin blockchain
-    /// bitcoin blockchain
+    /// blockchain file format | blockchain format | blockchain c# library | c# blockchain | blockchain unique addresses | c# blockchain parser
+    /// bitcoin does key exist in blockchain | view the bitcoin blockchain | bitcoin blockchain
     /// </summary>
     public class Program
     {
