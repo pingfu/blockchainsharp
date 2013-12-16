@@ -25,7 +25,7 @@ namespace BlockChainSharp.Dto
         public byte[] EcdsaPublickey { get; set; }
 
         /// <summary>
-        /// This is not part of the blockchain, it is computing from the EcdsaPublicKey.
+        /// This is not part of the blockchain, it is computed from the EcdsaPublicKey.
         /// </summary>
         public string BitcoinAddress { get; set; }
     }

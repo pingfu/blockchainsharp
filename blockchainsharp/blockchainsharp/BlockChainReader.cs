@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using BlockChainSharp.Dto;
 using BlockChainSharp.PInvoke;
 using BlockChainSharp.Util;
@@ -92,16 +91,14 @@ namespace BlockChainSharp
 
         /// <summary>
         /// Reads a single transaction off the blockchain in sequential order
+        /// 
+        /// thanks 
+        /// https://en.bitcoin.it/wiki/Protocol_specification#block
+        /// http://james.lab6.com/2012/01/12/bitcoin-285-bytes-that-changed-the-world/
+        /// https://code.google.com/p/blockchain/source/browse/trunk/BlockChain.h
         /// </summary>
         public Boolean Read()
         {
-            // thanks 
-            //
-            // https://en.bitcoin.it/wiki/Protocol_specification#block
-            // http://james.lab6.com/2012/01/12/bitcoin-285-bytes-that-changed-the-world/
-            // https://code.google.com/p/blockchain/source/browse/trunk/BlockChain.h
-            // 
-
             var newBlock = new BitcoinBlock { MagicBytes = Dequeue(4) };
 
             if (BitConverter.ToUInt32(newBlock.MagicBytes, 0) != 3652501241)
@@ -111,8 +108,8 @@ namespace BlockChainSharp
 
             newBlock.BlockSize = BitConverter.ToUInt32(Dequeue(4), 0);
             newBlock.BlockFormatVersion = BitConverter.ToUInt32(Dequeue(4), 0);
-            newBlock.PreviousBlockHash = Dequeue(32);
-            newBlock.MerkleRoot = Dequeue(32);
+            newBlock.PreviousBlockHash = ReverseArray(Dequeue(32));
+            newBlock.MerkleRoot = ReverseArray(Dequeue(32));
             newBlock.TimeStamp = Helper.UnixToDateTime(BitConverter.ToUInt32(Dequeue(4), 0));
             newBlock.Bits = BitConverter.ToUInt32(Dequeue(4), 0);
             newBlock.Nonce = BitConverter.ToUInt32(Dequeue(4), 0);
@@ -245,6 +242,17 @@ namespace BlockChainSharp
         }
 
         /// <summary>
+        /// Reverse the endianness of an array
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private byte[] ReverseArray(byte[] array)
+        {
+            Array.Reverse(array);
+            return array;
+        }
+
+        /// <summary>
         /// Extract the ECDSA public key from the ChallengeScript value of the blockchain
         /// </summary>
         /// <returns></returns>
@@ -261,7 +269,7 @@ namespace BlockChainSharp
         }
 
         /// <summary>
-        /// Thanks http://gobittest.appspot.com/Address for this method 
+        /// Thanks http://gobittest.appspot.com/Address
         /// </summary>
         /// <param name="ecdsaPublickey">Standard format ecdsa public key taken from the blockchain</param>
         /// <returns></returns>
@@ -270,19 +278,23 @@ namespace BlockChainSharp
             var sha256Managed = new SHA256Managed();
             var ripeMd160Managed = new RIPEMD160Managed();
 
-            var step1 = new byte[32]; // sha256 ecdsaPublicKey
-            var step2 = new byte[20]; // ripemd-160 hash step1
-            var step3 = new byte[21]; // add network bytes to step2
-            var step4 = new byte[32]; // sha256 step3
-            var step5 = new byte[32]; // sha256 step4
-            var step6 = new byte[4];  // get first four bytes of step 5
-            var step7 = new byte[25]; // add step6 to the end of step3
+            // step1: byte[32] -- sha256 ecdsaPublicKey
+            // step2: byte[20] -- ripemd-160 hash step1
+            // step3: byte[21] -- add network bytes to step2
+            // step4: byte[32] -- sha256 step3
+            // step5: byte[32] -- sha256 step4
+            // step6: byte[4]  -- get first four bytes of step 5
+            // step7: byte[25] -- add step6 to the end of step3
+
+            var step3 = new byte[21];
+            var step6 = new byte[4];
+            var step7 = new byte[25];
             
-            step1 = sha256Managed.ComputeHash(ecdsaPublickey);
-            step2 = ripeMd160Managed.ComputeHash(step1);
+            var step1 = sha256Managed.ComputeHash(ecdsaPublickey);
+            var step2 = ripeMd160Managed.ComputeHash(step1);
             Array.Copy(step2, 0, step3, 1, 20);
-            step4 = sha256Managed.ComputeHash(step3);
-            step5 = sha256Managed.ComputeHash(step4);
+            var step4 = sha256Managed.ComputeHash(step3);
+            var step5 = sha256Managed.ComputeHash(step4);
             Array.Copy(step5, 0, step6, 0, 4);
             Array.Copy(step3, 0, step7, 0, 21);
             Array.Copy(step6, 0, step7, 21, 4);

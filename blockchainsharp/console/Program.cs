@@ -31,11 +31,14 @@ namespace console
         public static void Main(string[] args)
         {
             var bcr = new BlockChainReader(new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks"));
-            var n = 1;
+            var n = -1;
 
             while (bcr.Read())
             {
+                n++;
+
                 if (!ShowDebug) continue;
+                //if (n != 254163) continue;
 
                 Console.Clear();
                 Console.SetCursorPosition(0, 0);
@@ -44,8 +47,8 @@ namespace console
                 Console.WriteLine("magicBytes:                  {0}", BitConverter.ToString(bcr.CurrentBlock.MagicBytes));
                 Console.WriteLine("blockSize:                   {0}", bcr.CurrentBlock.BlockSize);
                 Console.WriteLine("blockFormatVersion:          {0}", bcr.CurrentBlock.BlockFormatVersion);
-                Console.WriteLine("previousBlockHash:           {0}", BitConverter.ToString(bcr.CurrentBlock.PreviousBlockHash));
-                Console.WriteLine("markleRoot:                  {0}", BitConverter.ToString(bcr.CurrentBlock.MerkleRoot));
+                Console.WriteLine("previousBlockHash:           {0}", BitConverter.ToString(bcr.CurrentBlock.PreviousBlockHash).Replace("-", ""));
+                Console.WriteLine("markleRoot:                  {0}", BitConverter.ToString(bcr.CurrentBlock.MerkleRoot).Replace("-", ""));
                 Console.WriteLine("timeStamp:                   {0}", bcr.CurrentBlock.TimeStamp);
                 Console.WriteLine("bits:                        {0}", bcr.CurrentBlock.Bits);
                 Console.WriteLine("nonce:                       {0}", bcr.CurrentBlock.Nonce);
@@ -54,35 +57,33 @@ namespace console
 
                 foreach (var transaction in bcr.CurrentBlock.Transactions)
                 {
-                    Console.WriteLine(" transactionVersionNumber:   {0}", transaction.TransactionVersionNumber);
-                    Console.WriteLine(" lockTime:                   {0}", transaction.LockTime);
-                    Console.WriteLine(" inputCount:                 {0}", transaction.InputCount);
-                    Console.WriteLine(" outputCount:                {0}", transaction.OutputCount);
+                    Console.WriteLine(" + transactionVersionNumber: {0}", transaction.TransactionVersionNumber);
+                    Console.WriteLine("   inputCount:               {0}", transaction.InputCount);
+                    Console.WriteLine("   outputCount:              {0}", transaction.OutputCount);
+                    Console.WriteLine("   lockTime:                 {0}", transaction.LockTime);
 
                     Console.WriteLine();
 
                     foreach (var intput in transaction.Inputs)
                     {
-                        Console.WriteLine(" -> inputTransactionHash:    {0}", BitConverter.ToString(intput.InputTransactionHash));
-                        Console.WriteLine("  > inputTransactionIndex:   {0}", intput.InputTransactionIndex);
-                        Console.WriteLine("  > responseScriptLength:    {0}", intput.ResponseScriptLength);
-                        Console.WriteLine("  > responseScript:          {0}", Encoding.ASCII.GetString(intput.ResponseScript));
-                        Console.WriteLine("  > sequenceNumber:          {0}", intput.SequenceNumber);
+                        Console.WriteLine("   -> inputTransactionHash:  {0}", BitConverter.ToString(intput.InputTransactionHash).Replace("-", ""));
+                        Console.WriteLine("    > inputTransactionIndex: {0}", intput.InputTransactionIndex);
+                        Console.WriteLine("    > responseScriptLength:  {0}", intput.ResponseScriptLength);
+                        Console.WriteLine("    > responseScript:        {0}", Encoding.ASCII.GetString(intput.ResponseScript));
+                        Console.WriteLine("    > sequenceNumber:        {0}", intput.SequenceNumber);
                         Console.WriteLine();
                     }
 
                     foreach (var output in transaction.Outputs)
                     {
-                        Console.WriteLine(" -> outputValue:             {0}", output.OutputValue / 100000000 + " BTC");
-                        Console.WriteLine("  > challengeScriptLength:   {0}", output.ChallengeScriptLength);
-                        Console.WriteLine("  > challengeScript:         {0}", BitConverter.ToString(output.ChallengeScript).Replace("-", string.Empty));
-                        Console.WriteLine("  > ecdsaPublickey:          {0}", BitConverter.ToString(output.EcdsaPublickey).Replace("-", string.Empty));
-                        Console.WriteLine("  > bitcoinAddress:          {0}", output.BitcoinAddress);
+                        Console.WriteLine("   -> outputValue:           {0}", output.OutputValue / 100000000 + " BTC");
+                        Console.WriteLine("    > challengeScriptLength: {0}", output.ChallengeScriptLength);
+                        Console.WriteLine("    > challengeScript:       {0}", BitConverter.ToString(output.ChallengeScript).Replace("-", string.Empty));
+                        Console.WriteLine("    > ecdsaPublickey:        {0}", BitConverter.ToString(output.EcdsaPublickey).Replace("-", string.Empty));
+                        Console.WriteLine("    > bitcoinAddress:        {0}", output.BitcoinAddress);
                         Console.WriteLine();
                     }
                 }
-                n++;
-
                 Console.ReadLine();
             }
             
