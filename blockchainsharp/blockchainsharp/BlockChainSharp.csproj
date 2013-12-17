@@ -48,6 +48,7 @@
     <Compile Include="Dto\BitcoinOutput.cs" />
     <Compile Include="Dto\BitcoinBlock.cs" />
     <Compile Include="BlockChainReader.cs" />
+    <Compile Include="FakeQueue.cs" />
     <Compile Include="PInvoke\ClusterSize.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Encoding\ArrayHelpers.cs" />

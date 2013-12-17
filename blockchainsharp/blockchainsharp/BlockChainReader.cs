@@ -42,7 +42,8 @@ namespace BlockChainSharp
         public Int64 QueueLength { 
             get
             {
-                return _byteQueue.Count;
+                //return _byteQueue.Count;
+                return _fakeQueue.QueueLength;
             }
         }
 
@@ -90,6 +91,8 @@ namespace BlockChainSharp
         /// Provides a sequential view of the blockchain to the Read() method
         /// </summary>
         private readonly Queue<byte> _byteQueue = new Queue<byte>();
+
+        private readonly FakeQueue _fakeQueue = new FakeQueue();
 
         /// <summary>
         /// Assigns the enumerator we use on the enumerable the files on disk comprising the blockchain
@@ -171,21 +174,36 @@ namespace BlockChainSharp
         /// <returns></returns>
         private byte[] Dequeue(Int64 count)
         {
+            /*
             if (_byteQueue.Count == 0 || count >= _byteQueue.Count) 
             {
                 BlockChainReadAhead();
+            }*/
+
+
+
+
+
+            if (_fakeQueue.QueueLength == 0 || count >= _fakeQueue.QueueLength)
+            {
+                do
+                {
+                    BlockChainReadAhead();
+                } while (_fakeQueue.QueueLength < 8192);
             }
 
             var byteArray = new byte[count];
 
+            
             for (var i = 0; i < count; i++)
             {
                 // todo: a fifo queue operating byte by byte is WAY too slow, what can we replace this with?
                 // todo: BufferedStream operating on a BinaryReader?
                 // todo: light fifo memory stream?
                 // todo: Array.Copy?
-                byteArray[i] = _byteQueue.Dequeue();
+                //byteArray[i] = _byteQueue.Dequeue();
             }
+            return _fakeQueue.Dequeue(count);
 
             return byteArray;
         }
@@ -232,8 +250,10 @@ namespace BlockChainSharp
             // replenish the queue with a read-ahead function when there is less than 2MB of data waiting
             for (var n = 0; n < _readLength; n++)
             {
-                _byteQueue.Enqueue(_data[n]);
+                //_byteQueue.Enqueue(_data[n]);
             }
+
+            _fakeQueue.Enqueue(_data);
         }
 
         /// <summary>

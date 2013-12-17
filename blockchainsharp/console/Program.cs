@@ -37,7 +37,7 @@ namespace console
             Console.WriteLine("ready...");
             Console.ReadLine();
 
-            Timer = new Timer(TimerCallback, null, 600, 100);
+            Timer = new Timer(TimerCallback, null, 600, 1000);
 
             while (Bcr.Read())
             {
@@ -69,12 +69,12 @@ namespace console
                 Console.WriteLine("currentFile:                 {0}", Bcr.WorkingFile.Current.FullName);
                 Console.WriteLine();
                 Console.WriteLine("deltaReads:                  {0:n0} blocks", blockDelta);
-                Console.WriteLine("averageTransactionsObserved: {0:n0}", (L / blockDelta));
-                Console.WriteLine();
                 Console.WriteLine("observedBlocks:              {0:n0}", N);
-                Console.WriteLine("observedTransactions:        {0:n0}", T);
                 Console.WriteLine();
+                Console.WriteLine("averageTransactionsObserved: {0:n0}", (L / blockDelta));
+                Console.WriteLine("observedTransactions:        {0:n0}", T);
                 Console.WriteLine("queueBufferSize:             {0:n0} bytes", Bcr.QueueLength);
+                Console.WriteLine();
                 Console.WriteLine("uniqueCoinAddresses:         {0:n0}", PublicKeyDictionary.Count);
                 Console.WriteLine();
                 LastCount = N;
