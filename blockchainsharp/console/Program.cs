@@ -34,9 +34,6 @@ namespace console
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            Console.WriteLine("ready...");
-            Console.ReadLine();
-
             Timer = new Timer(TimerCallback, null, 0, 500);
 
             while (Bcr.Read())
