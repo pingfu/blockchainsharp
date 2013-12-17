@@ -37,6 +37,16 @@ namespace BlockChainSharp
         public BitcoinBlock CurrentBlock;
 
         /// <summary>
+        /// Exposes the length of the internal queue data structure
+        /// </summary>
+        public Int64 QueueLength { 
+            get
+            {
+                return _byteQueue.Count;
+            }
+        }
+
+        /// <summary>
         /// default location of the blockchain files
         /// </summary>
         private readonly String _defaultBlockChainDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Bitcoin\blocks";
@@ -79,7 +89,7 @@ namespace BlockChainSharp
         /// <summary>
         /// Provides a sequential view of the blockchain to the Read() method
         /// </summary>
-        public readonly Queue<byte> _byteQueue = new Queue<byte>();
+        private readonly Queue<byte> _byteQueue = new Queue<byte>();
 
         /// <summary>
         /// Assigns the enumerator we use on the enumerable the files on disk comprising the blockchain
@@ -142,7 +152,7 @@ namespace BlockChainSharp
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
                     newOutput.ChallengeScript = Dequeue(newOutput.ChallengeScriptLength);
                     newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
-                    newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
+                    //newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
                 }
 

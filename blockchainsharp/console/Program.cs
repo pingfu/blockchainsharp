@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using BlockChainSharp;
 
 
@@ -25,6 +24,8 @@ namespace console
 
         public static Int64 T = 0;  // transaction output counter
 
+        public static Int64 L = 0;  // average transactions per interval
+
         public static Int64 LastCount = 0;
 
         /// <summary>
@@ -36,11 +37,13 @@ namespace console
             Console.WriteLine("ready...");
             Console.ReadLine();
 
-            Timer = new Timer(TimerCallback, null, 2000, 100);
+            Timer = new Timer(TimerCallback, null, 600, 100);
 
             while (Bcr.Read())
             {
                 N++;
+                L += Bcr.CurrentBlock.TransactionCount;
+
                 foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
                 {
                     ThreadPool.QueueUserWorkItem(ProcessOutput, output.EcdsaPublickey);
@@ -54,20 +57,33 @@ namespace console
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="o"></param>
-        public static void TimerCallback(Object o)
+        /// <param name="obj"></param>
+        public static void TimerCallback(Object obj)
         {
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine("currentFile:                 {0}", Bcr.WorkingFile.Current.FullName);
-            Console.WriteLine("deltaReads:                  {0:n0}", N - LastCount);
-            Console.WriteLine("queueLength:                 {0:n0}", Bcr._byteQueue.Count);
-            Console.WriteLine();
-            Console.WriteLine("observedBlocks:              {0:n0}", N);
-            Console.WriteLine("observedTransactions:        {0:n0}", T);
-            Console.WriteLine("uniqueCoinAddresses:         {0:n0}", PublicKeyDictionary.Count);
-            Console.WriteLine();
-            LastCount = N;
+            try
+            {
+                var blockDelta = N - LastCount;
+
+                Console.Clear();
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine("currentFile:                 {0}", Bcr.WorkingFile.Current.FullName);
+                Console.WriteLine();
+                Console.WriteLine("deltaReads:                  {0:n0} blocks", blockDelta);
+                Console.WriteLine("averageTransactionsObserved: {0:n0}", (L / blockDelta));
+                Console.WriteLine();
+                Console.WriteLine("observedBlocks:              {0:n0}", N);
+                Console.WriteLine("observedTransactions:        {0:n0}", T);
+                Console.WriteLine();
+                Console.WriteLine("queueBufferSize:             {0:n0} bytes", Bcr.QueueLength);
+                Console.WriteLine("uniqueCoinAddresses:         {0:n0}", PublicKeyDictionary.Count);
+                Console.WriteLine();
+                LastCount = N;
+                L = 0;
+            }
+            catch (Exception)
+            {
+                // keep on truckin..
+            }
         }
 
         /// <summary>
