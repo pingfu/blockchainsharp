@@ -21,7 +21,7 @@ namespace BlockChainSharp
 
             ptrStart = 0;
             ptrEnd = 0;
-            prtHead = 1048576;
+            prtHead = _queue.Length;
         }
 
         /// <summary>
@@ -31,7 +31,8 @@ namespace BlockChainSharp
         {
             get
             {
-                return _queue.Length; 
+                //return _queue.Length; 
+                return ptrEnd - ptrStart;
             }
         }
 
@@ -41,12 +42,23 @@ namespace BlockChainSharp
         /// <param name="data"></param>
         public void Enqueue(byte[] data)
         {
-            var newArray = new byte[_queue.Length + data.Length];
+            if (ptrEnd >= prtHead - data.Length)
+            {
+                // this enqueue would overflow the array, cannot add more data.
+                // we'll copy the byteset back to the base of the array and 
+                // reset the pointers.
+                Buffer.BlockCopy(_queue, ptrStart, _queue, 0, ptrEnd - ptrStart);
 
-            Buffer.BlockCopy(_queue, 0, newArray, 0, _queue.Length);
-            Buffer.BlockCopy(data, 0, newArray, _queue.Length, data.Length);
+                ptrEnd = ptrEnd - ptrStart;
+                ptrStart = 0;
+            }
 
-            _queue = newArray;
+            var insertFrom = ptrEnd;
+            var insertTo = ptrEnd + data.Length;
+
+            Buffer.BlockCopy(data, 0, _queue, insertFrom, data.Length);
+
+            ptrEnd = insertTo;
         }
 
         /// <summary>
@@ -56,15 +68,21 @@ namespace BlockChainSharp
         /// <returns></returns>
         public byte[] Dequeue(int count)
         {
-            var requestedBytes = new byte[count];
-            var remainingBytes = new byte[_queue.Length - count];
+            if (QueueLength <= count)
+            {
+                // can't do that, the array is empty!
+                Console.WriteLine("empty");
+            }
 
-            Buffer.BlockCopy(_queue, 0, requestedBytes, 0, count);
-            Buffer.BlockCopy(_queue, count, remainingBytes, 0, _queue.Length - count);
+            var takeFrom = ptrStart;
+            var takeTo = ptrStart + count;
+            var data = new byte[count];
 
-            _queue = remainingBytes;
+            Buffer.BlockCopy(_queue, takeFrom, data, 0, data.Length);
 
-            return requestedBytes;
+            ptrStart = takeTo;
+
+            return data;
         }
     }
 }

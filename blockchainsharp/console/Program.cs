@@ -37,17 +37,20 @@ namespace console
             Console.WriteLine("ready...");
             Console.ReadLine();
 
-            Timer = new Timer(TimerCallback, null, 600, 1000);
+            Timer = new Timer(TimerCallback, null, 600, 100);
 
             while (Bcr.Read())
             {
+                if (N == 119963)
+                    Console.WriteLine(N);
+
                 N++;
                 L += Bcr.CurrentBlock.TransactionCount;
 
                 foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
                 {
-                    ThreadPool.QueueUserWorkItem(ProcessOutput, output.EcdsaPublickey);
-                    T++;
+                    //ThreadPool.QueueUserWorkItem(ProcessOutput, output.EcdsaPublickey);
+                    //T++;
                 }
             }
             Console.WriteLine("finished");

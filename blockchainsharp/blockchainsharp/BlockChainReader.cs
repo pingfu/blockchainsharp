@@ -179,7 +179,7 @@ namespace BlockChainSharp
                 do
                 {
                     BlockChainReadAhead();
-                } while (_fakeQueue.QueueLength < 8192);
+                } while (_fakeQueue.QueueLength < 4096);
             }
 
             return _fakeQueue.Dequeue(count);
