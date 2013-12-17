@@ -141,7 +141,7 @@ namespace BlockChainSharp
                     newInput.InputTransactionHash = Dequeue(32);
                     newInput.InputTransactionIndex = BitConverter.ToUInt32(Dequeue(4), 0);
                     newInput.ResponseScriptLength = ReadVariableLengthInteger(Dequeue(1));
-                    newInput.ResponseScript = Dequeue(newInput.ResponseScriptLength);
+                    newInput.ResponseScript = Dequeue((int)newInput.ResponseScriptLength);
                     newInput.SequenceNumber = BitConverter.ToUInt32(Dequeue(4), 0);
                     newTransaction.Inputs.Add(newInput);
                 }
@@ -153,7 +153,7 @@ namespace BlockChainSharp
                     var newOutput = new BitcoinOutput();
                     newOutput.OutputValue = BitConverter.ToUInt64(Dequeue(8), 0);
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
-                    newOutput.ChallengeScript = Dequeue(newOutput.ChallengeScriptLength);
+                    newOutput.ChallengeScript = Dequeue((int)newOutput.ChallengeScriptLength);
                     newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
                     //newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
@@ -172,18 +172,8 @@ namespace BlockChainSharp
         /// </summary>
         /// <param name="count">Number of bytes to dequeue</param>
         /// <returns></returns>
-        private byte[] Dequeue(Int64 count)
+        private byte[] Dequeue(int count)
         {
-            /*
-            if (_byteQueue.Count == 0 || count >= _byteQueue.Count) 
-            {
-                BlockChainReadAhead();
-            }*/
-
-
-
-
-
             if (_fakeQueue.QueueLength == 0 || count >= _fakeQueue.QueueLength)
             {
                 do
@@ -192,20 +182,7 @@ namespace BlockChainSharp
                 } while (_fakeQueue.QueueLength < 8192);
             }
 
-            var byteArray = new byte[count];
-
-            
-            for (var i = 0; i < count; i++)
-            {
-                // todo: a fifo queue operating byte by byte is WAY too slow, what can we replace this with?
-                // todo: BufferedStream operating on a BinaryReader?
-                // todo: light fifo memory stream?
-                // todo: Array.Copy?
-                //byteArray[i] = _byteQueue.Dequeue();
-            }
             return _fakeQueue.Dequeue(count);
-
-            return byteArray;
         }
 
         /// <summary>
@@ -247,12 +224,7 @@ namespace BlockChainSharp
             _currentFile.Read(_data, 0, checked((int)_readLength));
             _position += _readLength;
             
-            // replenish the queue with a read-ahead function when there is less than 2MB of data waiting
-            for (var n = 0; n < _readLength; n++)
-            {
-                //_byteQueue.Enqueue(_data[n]);
-            }
-
+            // drop this data block into the fifo queue
             _fakeQueue.Enqueue(_data);
         }
 

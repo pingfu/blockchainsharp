@@ -6,12 +6,22 @@ namespace BlockChainSharp
     {
         private byte[] _queue;
 
+        private Int32 ptrStart;
+
+        private Int32 ptrEnd;
+
+        private Int32 prtHead;
+
         /// <summary>
         /// 
         /// </summary>
         public FakeQueue()
         {
-            _queue = new byte[0];
+            _queue = new byte[1048576];
+
+            ptrStart = 0;
+            ptrEnd = 0;
+            prtHead = 1048576;
         }
 
         /// <summary>
@@ -33,8 +43,8 @@ namespace BlockChainSharp
         {
             var newArray = new byte[_queue.Length + data.Length];
 
-            Array.Copy(_queue, 0, newArray, 0, _queue.Length);
-            Array.Copy(data, 0, newArray, _queue.Length, data.Length);
+            Buffer.BlockCopy(_queue, 0, newArray, 0, _queue.Length);
+            Buffer.BlockCopy(data, 0, newArray, _queue.Length, data.Length);
 
             _queue = newArray;
         }
@@ -44,13 +54,13 @@ namespace BlockChainSharp
         /// </summary>
         /// <param name="count"></param>
         /// <returns></returns>
-        public byte[] Dequeue(long count)
+        public byte[] Dequeue(int count)
         {
             var requestedBytes = new byte[count];
             var remainingBytes = new byte[_queue.Length - count];
 
-            Array.Copy(_queue, 0, requestedBytes, 0, count);
-            Array.Copy(_queue, count, remainingBytes, 0, _queue.Length - count);
+            Buffer.BlockCopy(_queue, 0, requestedBytes, 0, count);
+            Buffer.BlockCopy(_queue, count, remainingBytes, 0, _queue.Length - count);
 
             _queue = remainingBytes;
 
