@@ -152,7 +152,7 @@ namespace BlockChainSharp
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
                     newOutput.ChallengeScript = Dequeue((int)newOutput.ChallengeScriptLength);
                     newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
-                    newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
+                    //newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
                 }
 

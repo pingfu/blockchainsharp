@@ -40,12 +40,12 @@ namespace console
             {
                 N++;
                 L += Bcr.CurrentBlock.TransactionCount;
-                /*
+                
                 foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
                 {
                     ThreadPool.QueueUserWorkItem(RecordUniqueCoins, output.EcdsaPublickey);
                     T++;
-                }*/
+                }
             }
             Console.WriteLine("finished");
             Console.ReadLine();
@@ -68,9 +68,9 @@ namespace console
                 Console.WriteLine("observedBlocks:              {0:n0} blocks", N);
                 Console.WriteLine("deltaReads:                  {0:n0}", blockDelta);
                 Console.WriteLine();
+                Console.WriteLine("queueBufferSize:             {0:n0} bytes", Bcr.QueueLength);
                 Console.WriteLine("averageTransactionsObserved: {0:n0}", (L / blockDelta));
                 Console.WriteLine("observedTransactions:        {0:n0}", T);
-                Console.WriteLine("queueBufferSize:             {0:n0} bytes", Bcr.QueueLength);
                 Console.WriteLine();
                 Console.WriteLine("uniqueCoinAddresses:         {0:n0}", PublicKeyDictionary.Count);
                 Console.WriteLine();
