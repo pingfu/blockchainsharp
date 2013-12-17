@@ -52,7 +52,7 @@ namespace BlockChainSharp
         }
 
         /// <summary>
-        /// Returns the maximum size of the data this queue will accept
+        /// Returns the maximum size of the data this queue will accept (with build in lea-way)
         /// </summary>
         public int MaxSize { 
             get

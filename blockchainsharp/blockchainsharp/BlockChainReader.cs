@@ -42,8 +42,7 @@ namespace BlockChainSharp
         public Int64 QueueLength { 
             get
             {
-                //return _byteQueue.Count;
-                return _dataQueue.Count;
+                return _byteQueue.Count;
             }
         }
 
@@ -87,7 +86,10 @@ namespace BlockChainSharp
         /// </summary>
         private FileStream _currentFile;
 
-        private readonly ByteQueue _dataQueue = new ByteQueue(524288);
+        /// <summary>
+        /// 
+        /// </summary>
+        private readonly ByteQueue _byteQueue = new ByteQueue(524288);
 
         /// <summary>
         /// Assigns the enumerator we use on the enumerable the files on disk comprising the blockchain
@@ -150,7 +152,7 @@ namespace BlockChainSharp
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
                     newOutput.ChallengeScript = Dequeue((int)newOutput.ChallengeScriptLength);
                     newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
-                    newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
+                    //newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
                 }
 
@@ -169,18 +171,18 @@ namespace BlockChainSharp
         /// <returns></returns>
         private byte[] Dequeue(int count)
         {
-            var queueLength = _dataQueue.Count;
+            var queueLength = _byteQueue.Count;
 
             if (queueLength <= count)
             {
                 do
                 {
-                    // read some more data from disk
+                    // read more data from blockchain storage
                     BlockChainReadAhead();
-                } while (_dataQueue.Count <= _dataQueue.MaxSize);
+                } while (_byteQueue.Count <= _byteQueue.MaxSize);
             }
 
-            return _dataQueue.Dequeue(count);
+            return _byteQueue.Dequeue(count);
         }
 
         /// <summary>
@@ -229,11 +231,11 @@ namespace BlockChainSharp
                 // so dont enqeue data padded with zero's, shrink wrap it.
                 var shinkWrappedData = new byte[_readLength];
                 Buffer.BlockCopy(_data, 0, shinkWrappedData, 0, (int)_readLength);
-                _dataQueue.Enqueue(shinkWrappedData);
+                _byteQueue.Enqueue(shinkWrappedData);
             }
             else
             {
-                _dataQueue.Enqueue(_data);
+                _byteQueue.Enqueue(_data);
             }
         }
 
