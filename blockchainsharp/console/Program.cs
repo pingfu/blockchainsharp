@@ -37,21 +37,18 @@ namespace console
             Console.WriteLine("ready...");
             Console.ReadLine();
 
-            Timer = new Timer(TimerCallback, null, 600, 100);
+            Timer = new Timer(TimerCallback, null, 0, 500);
 
             while (Bcr.Read())
             {
-                if (N == 119963)
-                    Console.WriteLine(N);
-
                 N++;
                 L += Bcr.CurrentBlock.TransactionCount;
-
+                /*
                 foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
                 {
-                    //ThreadPool.QueueUserWorkItem(ProcessOutput, output.EcdsaPublickey);
-                    //T++;
-                }
+                    ThreadPool.QueueUserWorkItem(RecordUniqueCoins, output.EcdsaPublickey);
+                    T++;
+                }*/
             }
             Console.WriteLine("finished");
             Console.ReadLine();
@@ -71,8 +68,8 @@ namespace console
                 Console.SetCursorPosition(0, 0);
                 Console.WriteLine("currentFile:                 {0}", Bcr.WorkingFile.Current.FullName);
                 Console.WriteLine();
-                Console.WriteLine("deltaReads:                  {0:n0} blocks", blockDelta);
-                Console.WriteLine("observedBlocks:              {0:n0}", N);
+                Console.WriteLine("observedBlocks:              {0:n0} blocks", N);
+                Console.WriteLine("deltaReads:                  {0:n0}", blockDelta);
                 Console.WriteLine();
                 Console.WriteLine("averageTransactionsObserved: {0:n0}", (L / blockDelta));
                 Console.WriteLine("observedTransactions:        {0:n0}", T);
@@ -93,7 +90,7 @@ namespace console
         /// 
         /// </summary>
         /// <param name="ecdsaPublickey"></param>
-        public static void ProcessOutput(object ecdsaPublickey)
+        public static void RecordUniqueCoins(object ecdsaPublickey)
         {
             var bytes = (byte[]) ecdsaPublickey;
 

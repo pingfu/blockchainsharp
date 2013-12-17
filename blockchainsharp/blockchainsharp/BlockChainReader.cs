@@ -43,7 +43,7 @@ namespace BlockChainSharp
             get
             {
                 //return _byteQueue.Count;
-                return _fakeQueue.QueueLength;
+                return _dataQueue.Count;
             }
         }
 
@@ -87,12 +87,7 @@ namespace BlockChainSharp
         /// </summary>
         private FileStream _currentFile;
 
-        /// <summary>
-        /// Provides a sequential view of the blockchain to the Read() method
-        /// </summary>
-        private readonly Queue<byte> _byteQueue = new Queue<byte>();
-
-        private readonly FakeQueue _fakeQueue = new FakeQueue();
+        private readonly ByteQueue _dataQueue = new ByteQueue(524288);
 
         /// <summary>
         /// Assigns the enumerator we use on the enumerable the files on disk comprising the blockchain
@@ -155,7 +150,7 @@ namespace BlockChainSharp
                     newOutput.ChallengeScriptLength = ReadVariableLengthInteger(Dequeue(1));
                     newOutput.ChallengeScript = Dequeue((int)newOutput.ChallengeScriptLength);
                     newOutput.EcdsaPublickey = ExtractPublicKey(newOutput.ChallengeScript);
-                    //newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
+                    newOutput.BitcoinAddress = ComputeBitcoinAddress(newOutput.EcdsaPublickey);
                     newTransaction.Outputs.Add(newOutput);
                 }
 
@@ -174,15 +169,18 @@ namespace BlockChainSharp
         /// <returns></returns>
         private byte[] Dequeue(int count)
         {
-            if (_fakeQueue.QueueLength == 0 || count >= _fakeQueue.QueueLength)
+            var queueLength = _dataQueue.Count;
+
+            if (queueLength <= count)
             {
                 do
                 {
+                    // read some more data from disk
                     BlockChainReadAhead();
-                } while (_fakeQueue.QueueLength < 4096);
+                } while (_dataQueue.Count <= _dataQueue.MaxSize);
             }
 
-            return _fakeQueue.Dequeue(count);
+            return _dataQueue.Dequeue(count);
         }
 
         /// <summary>
@@ -203,7 +201,7 @@ namespace BlockChainSharp
                 if (WorkingFile.MoveNext() == false)
                 {
                     // no where left to go, we've hit the end of the blockchain.
-                    return;
+                    throw new Exception("no more block chain data to process. end of file.");
                 }
 
                 // setup to read from the next file in the blockchain
@@ -225,7 +223,18 @@ namespace BlockChainSharp
             _position += _readLength;
             
             // drop this data block into the fifo queue
-            _fakeQueue.Enqueue(_data);
+            if (_readLength < _data.Length)
+            {
+                // the last block of the file might be less than 4096 bytes, 
+                // so dont enqeue data padded with zero's, shrink wrap it.
+                var shinkWrappedData = new byte[_readLength];
+                Buffer.BlockCopy(_data, 0, shinkWrappedData, 0, (int)_readLength);
+                _dataQueue.Enqueue(shinkWrappedData);
+            }
+            else
+            {
+                _dataQueue.Enqueue(_data);
+            }
         }
 
         /// <summary>
