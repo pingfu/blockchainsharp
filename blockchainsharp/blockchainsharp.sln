@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockChainSharp", "blockchainsharp\BlockChainSharp.csproj", "{74DEC92E-F0D5-4F26-9D17-0543342D51D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "console", "console\console.csproj", "{EBD197F1-18C1-4EFC-B2EF-5D9ED21CCD9B}"

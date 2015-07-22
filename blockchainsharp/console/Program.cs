@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using BlockChainSharp;
-
 
 namespace console
 {
@@ -64,7 +61,7 @@ namespace console
                 L += Bcr.CurrentBlock.TransactionCount;
                 
                 /*
-                 * todo: Storing each unique coin in a hashset drops me an out of memory exception at around 6 million
+                 * todo: Storing each unique coin in a hashset drops an out of memory exception at around 6 million
                  * todo:    -- expensive operation, should it be a feature flag?
                  * 
                 foreach (var output in Bcr.CurrentBlock.Transactions.SelectMany(transaction => transaction.Outputs))
